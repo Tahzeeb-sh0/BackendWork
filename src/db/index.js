@@ -14,6 +14,7 @@ const dbConnect = async ()=>{
         app.on('error',(error)=>{
             console.log(`ERROR: ${error}`);
             process.exit(1);
+           
         })
 
         
@@ -23,14 +24,4 @@ const dbConnect = async ()=>{
         
     }
 }
-
-app.get('/',(req,res)=>[
-    res.send("<h1>Database connected!</h1>")
-])
-
-app.listen(process.env.PORT,()=>{
-    console.log(`App listening on this port: `)
-})
-
-
 export default dbConnect;
