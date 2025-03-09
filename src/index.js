@@ -1,24 +1,21 @@
 // require('dotenv').config({path: './env'})
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 import dbConnect from "./db/index.js";
-import express from 'express'
-import { app } from './app.js';
+import express from "express";
+import { app } from "./app.js";
 dotenv.config({
-    path:'./.env'
-})
+  path: "./.env",
+});
 
 dbConnect()
-.then(()=>{
-
-    app.listen(process.env.PORT,()=>{
-        console.log(`App listening on this port: ${process.env.PORT}`)
-    }            
-    )
-})
-.catch((error)=>{
+  .then(() => {
+    app.listen(process.env.PORT, () => {
+      console.log(`App listening on this port: ${process.env.PORT}`);
+    });
+  })
+  .catch((error) => {
     console.log(`Database connection failed!!!: ${error}`);
-})
-
+  });
 
 // const app = express();
 // (async()=>{
@@ -33,7 +30,7 @@ dbConnect()
 //        app.listen(process.env.PORT,()=>{
 //         console.log(`App listening on this port: ${process.env.PORT}`);
 //        })
-        
+
 //     } catch (error) {
 //         console.log(error)
 //         throw error;
