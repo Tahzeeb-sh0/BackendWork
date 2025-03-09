@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { DB_NAME } from "../constants.js";
 import express from 'express'
-import dotenv from 'dotenv'
+
 const app = express();
 
 const dbConnect = async ()=>{
