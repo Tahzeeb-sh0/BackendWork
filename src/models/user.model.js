@@ -44,7 +44,7 @@ const userSchema = new Schema(
       type: String,
     },
   },
-  { timeseries: true }
+  { timestamps: true }
 );
 
 userSchema.pre("save", async function (next) {
@@ -73,7 +73,7 @@ userSchema.methods.generateAccessToken = function () {
 };
 
 userSchema.methods.generateRefreshToken = async function () {
-  jwt.sign(
+  return jwt.sign(
     {
       _id: this._id,
     },
