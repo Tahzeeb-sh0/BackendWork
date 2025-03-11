@@ -4,6 +4,7 @@ import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinaryFileUpload.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 const generateAccessAndRefreshToken = async (userId) => {
   try {
@@ -334,7 +335,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     new ApiError(400, "Username is missing");
   }
 
-  const channel = User.aggregate([
+  const channel = await User.aggregate([
     {
       $match: {
         username: username?.toLowerCase(),
@@ -347,6 +348,8 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
         foreignField: "channel",
         as: "subscribers",
       },
+    },
+    {
       $lookup: {
         from: "subscriptions",
         localField: "_id",
@@ -362,17 +365,77 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
         channelSubscribedToCount: {
           $size: "subscriberedTo",
         },
-        isSubscribed:{
-          $cond:{
-            if:{$in:[req.user?._id , "$subscribers.subscriber"]},
-            then:true,
-            else:false
-          }
-        }
+        isSubscribed: {
+          $cond: {
+            if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+            then: true,
+            else: false,
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        username: 1,
+        email: 1,
+        avatar: 1,
+        coverImage: 1,
+        channelSubscribedToCount: 1,
+        subscriberCount: 1,
+        isSubscribed: 1,
       },
     },
   ]);
+
+  if (!channel?.length) {
+    throw new ApiError(404, "Channel does not exists");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, channel[0], "User channel fetched successfully")
+    );
 });
+
+const getUserWatchHisteory = asyncHandler(async(req , res)=>{
+  const user = await User.aggregate([
+    {
+      $match:{
+        _id: new mongoose.Types.ObjectId(req.user._id)
+      }
+
+    },{
+      $lookup:{
+        from:"videos",
+        localField:"watchHistory",
+        foreignField:"_id",
+        as:"watchHistory",
+        pipeline:[
+          {
+          $lookup:{
+            from:"users",
+            localField:"owner",
+            foreignField:"_id",
+            pipeline:[
+              {
+                $project:{
+                  fullName:1,
+                  username:1,
+                  avatar:1
+                }
+              }
+            ]
+          
+          }
+        }
+        ]
+
+      }
+    }
+  ])
+});
+
 export {
   registerUser,
   loginUser,
@@ -384,4 +447,5 @@ export {
   updateUserAvatar,
   updateUserCoverImage,
   getUserChannelProfile,
+  getUserWatchHisteory
 };
