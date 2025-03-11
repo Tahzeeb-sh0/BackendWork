@@ -263,82 +263,116 @@ const updateUserdetails = asyncHandler(async (req, res) => {
     {
       new: true,
     }
-  ).select(" -password ")
+  ).select(" -password ");
 
-  return res.status(200).json(new ApiResponse(200,user,"Account detials updated"))
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Account detials updated"));
 });
 
-const updateUserAvatar = asyncHandler(async(req , res)=>{
+const updateUserAvatar = asyncHandler(async (req, res) => {
   const avatarLocalPath = req.file?.path;
 
   if (!avatarLocalPath) {
-
-    throw new ApiError(400,"Avatar file is missing");
-    
+    throw new ApiError(400, "Avatar file is missing");
   }
 
   const avatar = await uploadOnCloudinary(avatarLocalPath);
   if (!avatar.url) {
-
-    throw new ApiError(400,"Error while uploadind avatar");
-    
-  }
-
- const user = await User.findByIdAndUpdate(
-    req.user._id,
-    {
-      $set:{
-        avatar:avatar.url
-      }
-    },
-    {
-      new:true
-    }
-  ).select(" -password ");
-
-  return res.status(200)
-  .json(new ApiResponse(200,user,"  Avatar updated successfully"))
-})
-
-const updateUserCoverImage = asyncHandler(async(req , res)=>{
-  const coverImageLocalPath = req.file?.path;
-
-  if (!coverImageLocalPath) {
-
-    throw new ApiError(400,"Cover image file is missing");
-    
-  }
-
-  const coverImage = await uploadOnCloudinary(coverImageLocalPath);
-  if (!coverImage.url) {
-
-    throw new ApiError(400,"Error while uploadind coverImage");
-    
+    throw new ApiError(400, "Error while uploadind avatar");
   }
 
   const user = await User.findByIdAndUpdate(
     req.user._id,
     {
-      $set:{
-        coverImage:coverImage.url
-      }
+      $set: {
+        avatar: avatar.url,
+      },
     },
     {
-      new:true
+      new: true,
     }
   ).select(" -password ");
 
-  return res.status(200)
-  .json(new ApiResponse(200,user,"Cover image updated successfully"))
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "  Avatar updated successfully"));
 });
 
-const getUserChannelProfile = asyncHandler(async (req , res)=>{
+const updateUserCoverImage = asyncHandler(async (req, res) => {
+  const coverImageLocalPath = req.file?.path;
 
-  const {username} = req.params
-  if (!username.trim()) {
-    new ApiError(400,"Username is missing");
+  if (!coverImageLocalPath) {
+    throw new ApiError(400, "Cover image file is missing");
   }
-})
+
+  const coverImage = await uploadOnCloudinary(coverImageLocalPath);
+  if (!coverImage.url) {
+    throw new ApiError(400, "Error while uploadind coverImage");
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $set: {
+        coverImage: coverImage.url,
+      },
+    },
+    {
+      new: true,
+    }
+  ).select(" -password ");
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Cover image updated successfully"));
+});
+
+const getUserChannelProfile = asyncHandler(async (req, res) => {
+  const { username } = req.params;
+  if (!username.trim()) {
+    new ApiError(400, "Username is missing");
+  }
+
+  const channel = User.aggregate([
+    {
+      $match: {
+        username: username?.toLowerCase(),
+      },
+    },
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "channel",
+        as: "subscribers",
+      },
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "subscriber",
+        as: "subscriberedTo",
+      },
+    },
+    {
+      $addFields: {
+        subscriberCount: {
+          $size: "subscribers",
+        },
+        channelSubscribedToCount: {
+          $size: "subscriberedTo",
+        },
+        isSubscribed:{
+          $cond:{
+            if:{$in:[req.user?._id , "$subscribers.subscriber"]},
+            then:true,
+            else:false
+          }
+        }
+      },
+    },
+  ]);
+});
 export {
   registerUser,
   loginUser,
@@ -350,5 +384,4 @@ export {
   updateUserAvatar,
   updateUserCoverImage,
   getUserChannelProfile,
-
 };
