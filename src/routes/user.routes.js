@@ -13,7 +13,7 @@ import {
 import { upload } from "../middleware/multer.middleware.js";
 import { loginUser } from "../controllers/user.controller.js";
 import { verifyjwt } from "../middleware/auth.middleware.js";
-import { get } from "mongoose";
+
 
 const router = express.Router();
 
