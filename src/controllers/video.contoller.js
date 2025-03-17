@@ -8,29 +8,60 @@ import {uploadOnCloudinary} from "../utils/cloudinary.js"
 
 
 const getAllVideos = asyncHandler(async (req, res) => {
-    const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query
-    //TODO: get all videos based on query, sort, pagination
+    const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
+
+  
 })
 
 const publishAVideo = asyncHandler(async (req, res) => {
-    const { title, description} = req.body
-    // TODO: get video, upload to cloudinary, create video
+    const { title, description,} = req.body
+   
+    if ([title,description].some((fields)=> fields.trim() == "")) {
+        throw new ApiError(400,"All field are required")
+    }
+    const thumbnailLocalFilePath = req.files?.thumbnail[0]?.path;
+    const videoLocalFilePath = req.files?.videoFile[0]?.path;
+
+    if ([thumbnailLocalFilePath,videoLocalFilePath].some((field)=>field.trim()=="")) {
+        throw new ApiError(400,"All field are required")
+    }
+
+    const video = await uploadOnCloudinary(videoLocalFilePath);
+    const thumbnail = await uploadOnCloudinary(thumbnailLocalFilePath);
+
+    if (!video && !thumbnail) {
+        throw new ApiError(400,"Video and thumbnail file are required")
+    }
+
+   await User.create({
+    title,
+    description,
+    videoFile:video,
+    thumbnail:thumbnail,
+    })
+  
 })
 
 const getVideoById = asyncHandler(async (req, res) => {
     const { videoId } = req.params
-    //TODO: get video by id
+  
+
+    if (!videoId) {
+        throw new ApiError(404,"Video is not present")
+    }
+
+    
 })
 
 const updateVideo = asyncHandler(async (req, res) => {
     const { videoId } = req.params
-    //TODO: update video details like title, description, thumbnail
+  
 
 })
 
 const deleteVideo = asyncHandler(async (req, res) => {
     const { videoId } = req.params
-    //TODO: delete video
+
 })
 
 const togglePublishStatus = asyncHandler(async (req, res) => {
